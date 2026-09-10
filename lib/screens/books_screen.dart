@@ -123,12 +123,24 @@ class _BooksScreenState extends State<BooksScreen> {
   }
 
   Widget _actions(Book item, BookListNotifier notifier) {
-    return IconButton(
-      key: ValueKey('action-${item.id}'),
-      tooltip: item.isDeleted ? 'Восстановить' : 'Удалить',
-      icon: Icon(item.isDeleted ? Icons.restore : Icons.delete_outline),
-      onPressed: () =>
-          item.isDeleted ? notifier.restore(item.id) : _delete(item, notifier),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          key: ValueKey('edit-${item.id}'),
+          tooltip: 'Редактировать',
+          icon: const Icon(Icons.edit_outlined),
+          onPressed: () => context.go('/books/${item.id}/edit'),
+        ),
+        IconButton(
+          key: ValueKey('action-${item.id}'),
+          tooltip: item.isDeleted ? 'Восстановить' : 'Удалить',
+          icon: Icon(item.isDeleted ? Icons.restore : Icons.delete_outline),
+          onPressed: () => item.isDeleted
+              ? notifier.restore(item.id)
+              : _delete(item, notifier),
+        ),
+      ],
     );
   }
 
@@ -137,7 +149,15 @@ class _BooksScreenState extends State<BooksScreen> {
     final notifier = context.watch<BookListNotifier>();
     final authors = context.watch<AuthorListNotifier>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Книги')),
+      appBar: AppBar(
+        title: const Text('Книги'),
+        actions: [
+          TextButton(
+            onPressed: () => context.go('/books/new'),
+            child: const Text('Добавить книгу'),
+          ),
+        ],
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final items = notifier.books;

@@ -3,7 +3,30 @@ import 'author_repository.dart';
 import 'seed_data.dart';
 
 class InMemoryAuthorRepository implements AuthorRepository {
-  final List<Author> _authors = List.of(seedAuthors);
+  InMemoryAuthorRepository({List<Author>? initialData})
+    : _authors = List.of(initialData ?? seedAuthors);
+
+  final List<Author> _authors;
+
+  @override
+  Author create(Author item) {
+    final nextId =
+        _authors.fold<int>(
+          0,
+          (maxId, item) => item.id > maxId ? item.id : maxId,
+        ) +
+        1;
+    final created = item.copyWith(id: nextId, clearDeletedAt: true);
+    _authors.add(created);
+    return created;
+  }
+
+  @override
+  void update(Author item) {
+    final index = _authors.indexWhere((current) => current.id == item.id);
+    if (index == -1) throw StateError('Запись не найдена');
+    _authors[index] = item;
+  }
 
   @override
   List<Author> getAll({String query = '', bool includeDeleted = false}) {

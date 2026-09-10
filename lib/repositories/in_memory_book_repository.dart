@@ -3,7 +3,30 @@ import 'book_repository.dart';
 import 'seed_data.dart';
 
 class InMemoryBookRepository implements BookRepository {
-  final List<Book> _books = List.of(seedBooks);
+  InMemoryBookRepository({List<Book>? initialData})
+    : _books = List.of(initialData ?? seedBooks);
+
+  final List<Book> _books;
+
+  @override
+  Book create(Book item) {
+    final nextId =
+        _books.fold<int>(
+          0,
+          (maxId, item) => item.id > maxId ? item.id : maxId,
+        ) +
+        1;
+    final created = item.copyWith(id: nextId, clearDeletedAt: true);
+    _books.add(created);
+    return created;
+  }
+
+  @override
+  void update(Book item) {
+    final index = _books.indexWhere((current) => current.id == item.id);
+    if (index == -1) throw StateError('Запись не найдена');
+    _books[index] = item;
+  }
 
   @override
   List<Book> getAll({

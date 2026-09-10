@@ -65,12 +65,24 @@ class _AuthorsScreenState extends State<AuthorsScreen> {
   }
 
   Widget _actions(Author item, AuthorListNotifier notifier) {
-    return IconButton(
-      key: ValueKey('action-${item.id}'),
-      tooltip: item.isDeleted ? 'Восстановить' : 'Удалить',
-      icon: Icon(item.isDeleted ? Icons.restore : Icons.delete_outline),
-      onPressed: () =>
-          item.isDeleted ? notifier.restore(item.id) : _delete(item, notifier),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          key: ValueKey('edit-${item.id}'),
+          tooltip: 'Редактировать',
+          icon: const Icon(Icons.edit_outlined),
+          onPressed: () => context.go('/authors/${item.id}/edit'),
+        ),
+        IconButton(
+          key: ValueKey('action-${item.id}'),
+          tooltip: item.isDeleted ? 'Восстановить' : 'Удалить',
+          icon: Icon(item.isDeleted ? Icons.restore : Icons.delete_outline),
+          onPressed: () => item.isDeleted
+              ? notifier.restore(item.id)
+              : _delete(item, notifier),
+        ),
+      ],
     );
   }
 
@@ -78,7 +90,15 @@ class _AuthorsScreenState extends State<AuthorsScreen> {
   Widget build(BuildContext context) {
     final notifier = context.watch<AuthorListNotifier>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Авторы')),
+      appBar: AppBar(
+        title: const Text('Авторы'),
+        actions: [
+          TextButton(
+            onPressed: () => context.go('/authors/new'),
+            child: const Text('Добавить автора'),
+          ),
+        ],
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final items = notifier.authors;

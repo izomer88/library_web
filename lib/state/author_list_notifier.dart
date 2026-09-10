@@ -22,6 +22,32 @@ class AuthorListNotifier extends ChangeNotifier {
   bool get includeDeleted => _includeDeleted;
   Set<int> get selectedIds => Set.unmodifiable(_selectedIds);
 
+  Future<Author?> create(Author item) async {
+    try {
+      final created = await _repository.create(item);
+      await load();
+      return created;
+    } catch (_) {
+      _status = LoadStatus.error;
+      _errorMessage = 'Не удалось создать запись. Попробуйте ещё раз.';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<bool> update(Author item) async {
+    try {
+      await _repository.update(item);
+      await load();
+      return true;
+    } catch (_) {
+      _status = LoadStatus.error;
+      _errorMessage = 'Не удалось сохранить изменения. Попробуйте ещё раз.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   // Связи книги не зависят от поиска и фильтров списка авторов.
   String namesForIds(List<int> ids) {
     return ids
@@ -88,7 +114,7 @@ class AuthorListNotifier extends ChangeNotifier {
 
   Future<void> softDelete(int id) async {
     try {
-      _repository.softDelete(id);
+      await _repository.softDelete(id);
       _selectedIds.remove(id);
       await load();
     } catch (_) {
@@ -101,7 +127,7 @@ class AuthorListNotifier extends ChangeNotifier {
 
   Future<void> hardDelete(int id) async {
     try {
-      _repository.hardDelete(id);
+      await _repository.hardDelete(id);
       _selectedIds.remove(id);
       await load();
     } catch (_) {
@@ -114,7 +140,7 @@ class AuthorListNotifier extends ChangeNotifier {
 
   Future<void> restore(int id) async {
     try {
-      _repository.restore(id);
+      await _repository.restore(id);
       _selectedIds.remove(id);
       await load();
     } catch (_) {

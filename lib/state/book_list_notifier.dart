@@ -30,6 +30,32 @@ class BookListNotifier extends ChangeNotifier {
   bool get includeDeleted => _includeDeleted;
   Set<int> get selectedIds => Set.unmodifiable(_selectedIds);
 
+  Future<Book?> create(Book item) async {
+    try {
+      final created = await _repository.create(item);
+      await load();
+      return created;
+    } catch (_) {
+      _status = LoadStatus.error;
+      _errorMessage = 'Не удалось создать запись. Попробуйте ещё раз.';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<bool> update(Book item) async {
+    try {
+      await _repository.update(item);
+      await load();
+      return true;
+    } catch (_) {
+      _status = LoadStatus.error;
+      _errorMessage = 'Не удалось сохранить изменения. Попробуйте ещё раз.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   // Детали доступны независимо от поиска и фильтров списка.
   Future<Book?> getById(int id) async {
     return _repository.getById(id, includeDeleted: _includeDeleted);
@@ -104,7 +130,7 @@ class BookListNotifier extends ChangeNotifier {
 
   Future<void> softDelete(int id) async {
     try {
-      _repository.softDelete(id);
+      await _repository.softDelete(id);
       _selectedIds.remove(id);
       await load();
     } catch (_) {
@@ -117,7 +143,7 @@ class BookListNotifier extends ChangeNotifier {
 
   Future<void> hardDelete(int id) async {
     try {
-      _repository.hardDelete(id);
+      await _repository.hardDelete(id);
       _selectedIds.remove(id);
       await load();
     } catch (_) {
@@ -130,7 +156,7 @@ class BookListNotifier extends ChangeNotifier {
 
   Future<void> restore(int id) async {
     try {
-      _repository.restore(id);
+      await _repository.restore(id);
       _selectedIds.remove(id);
       await load();
     } catch (_) {
@@ -142,7 +168,7 @@ class BookListNotifier extends ChangeNotifier {
 
   Future<int> deleteSelected() async {
     try {
-      final deletedCount = _repository.deleteMany(_selectedIds.toList());
+      final deletedCount = await _repository.deleteMany(_selectedIds.toList());
       _selectedIds.clear();
       await load();
       return deletedCount;
